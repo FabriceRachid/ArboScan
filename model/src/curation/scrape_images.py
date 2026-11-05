@@ -18,6 +18,7 @@ import json
 import re
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 import requests
 from PIL import Image
@@ -28,6 +29,7 @@ SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": "ArboScan/0.1 (recherche ethnobotanique Burkina Faso)"})
 
 REPORT_PATH = ROOT / "model" / "data" / "metadata" / "scrape_report.json"
+ATTRIBUTION_PATH = ROOT / "model" / "data" / "metadata" / "image_sources.jsonl"
 INAT_LICENSES = "cc0,cc-by,cc-by-sa"
 MIN_SIZE = 224  # côté min en pixels pour être utile
 
@@ -47,6 +49,37 @@ def _get_json(url: str, params: dict | None = None, retries: int = 3) -> dict | 
                 return None
             time.sleep(1 + attempt)
     return None
+
+
+def _allowed_inat_license(code: str | None) -> bool:
+    return (code or "").lower() in {"cc0", "cc-by", "cc-by-sa"}
+
+
+def _allowed_commons_license(name: str, url: str) -> bool:
+    text = f"{name} {url}".lower().replace("-", " ")
+    if any(term in text for term in ("non commercial", "noncommercial", "nc", "nd", "fair use")):
+        return False
+    return (
+        "cc0" in text
+        or "public domain" in text
+        or "creativecommons.org/licenses/by/" in text
+        or "creativecommons.org/licenses/by sa/" in text
+        or "cc by " in text
+        or "cc by-sa " in text
+    )
+
+
+def _manual_exclusions(slug: str) -> int:
+    if not ATTRIBUTION_PATH.exists():
+        return 0
+    count = 0
+    for line in ATTRIBUTION_PATH.read_text(encoding="utf-8").splitlines():
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        count += row.get("slug") == slug and row.get("review_status") == "excluded_manual"
+    return count
 
 
 def fetch_inaturalist(scientific_name: str, limit: int = 60) -> list[dict]:
@@ -73,7 +106,8 @@ def fetch_inaturalist(scientific_name: str, limit: int = 60) -> list[dict]:
             for photo in obs.get("photos", []):
                 url = photo.get("url", "")
                 pid = photo.get("id")
-                if not url or pid in seen_photo_ids:
+                license_code = photo.get("license_code")
+                if not url or pid in seen_photo_ids or not _allowed_inat_license(license_code):
                     continue
                 seen_photo_ids.add(pid)
                 url_large = re.sub(r"/square\.", "/large.", url)
@@ -81,8 +115,12 @@ def fetch_inaturalist(scientific_name: str, limit: int = 60) -> list[dict]:
                     {
                         "url": url_large,
                         "source": "inaturalist",
-                        "license": photo.get("license_code", "cc-by"),
+                        "license": license_code,
+                        "attribution": photo.get("attribution"),
                         "photo_id": pid,
+                        "page": f"https://www.inaturalist.org/observations/{obs.get('id')}"
+                        if obs.get("id")
+                        else "https://www.inaturalist.org/",
                     }
                 )
                 if len(out) >= limit:
@@ -128,8 +166,9 @@ def fetch_wikimedia(scientific_name: str, limit: int = 40) -> list[dict]:
             if w < MIN_SIZE or h < MIN_SIZE:
                 continue
             meta = ii.get("extmetadata", {})
-            lic = (meta.get("LicenseShortName", {}) or {}).get("value", "CC")
-            if "fair" in lic.lower() or "non-free" in lic.lower():
+            lic = (meta.get("LicenseShortName", {}) or {}).get("value", "")
+            lic_url = (meta.get("LicenseUrl", {}) or {}).get("value", "")
+            if not _allowed_commons_license(lic, lic_url):
                 continue
             seen_urls.add(thumb)
             out.append(
@@ -137,7 +176,11 @@ def fetch_wikimedia(scientific_name: str, limit: int = 40) -> list[dict]:
                     "url": thumb,
                     "source": "wikimedia",
                     "license": lic,
+                    "license_url": lic_url,
+                    "attribution": (meta.get("Artist", {}) or {}).get("value", ""),
                     "page": page.get("title"),
+                    "page_url": "https://commons.wikimedia.org/wiki/"
+                    + quote(page.get("title", "").replace(" ", "_"), safe="/:"),
                 }
             )
             if len(out) >= limit:
@@ -200,14 +243,25 @@ def scrape_species(
         p = download_one(cand["url"], dest_dir, prefix, i)
         if p:
             downloaded += 1
+            attribution = {
+                **cand,
+                "espece": scientific_name,
+                "slug": slug,
+                "fichier": str(p.relative_to(ROOT)),
+                "date_telechargement": time.strftime("%Y-%m-%d"),
+            }
+            ATTRIBUTION_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with ATTRIBUTION_PATH.open("a", encoding="utf-8") as manifest:
+                manifest.write(json.dumps(attribution, ensure_ascii=False) + "\n")
         else:
             skipped += 1
         time.sleep(0.12)
 
     total = len(list(dest_dir.glob("*.jpg")))
+    excluded = _manual_exclusions(slug)
     print(
         f"  {scientific_name:32s} | +{downloaded} (skip {skipped}) "
-        f"| avant={existing} après={total}"
+        f"| avant={existing} après={total} | exclus manuel={excluded}"
     )
     return {
         "espece": scientific_name,
@@ -216,6 +270,7 @@ def scrape_species(
         "telecharges": downloaded,
         "sautés": skipped,
         "apres": total,
+        "exclus_manuellement": excluded,
         "candidats_sources": len(candidates),
     }
 
@@ -252,7 +307,7 @@ def main():
     total_new = sum(r["telecharges"] for r in report)
     total_all = sum(r["apres"] for r in report)
     print(f"\nBilan : +{total_new} images téléchargées | total dataset = {total_all}")
-    print(f"Rapport → {REPORT_PATH}")
+    print(f"Rapport: {REPORT_PATH}")
 
 
 if __name__ == "__main__":

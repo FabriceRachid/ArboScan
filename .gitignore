@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
 model/data/images/
+model/data/curated/excluded_images/
 model/artifacts/*.pt
 model/artifacts/*.joblib
 
