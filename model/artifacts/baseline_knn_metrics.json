@@ -1,0 +1,12 @@
+{
+  "backbone": "mobilenet_v3_small",
+  "k": 5,
+  "dim": 1024,
+  "train_acc": 1.0,
+  "val_acc": 0.35714285714285715,
+  "test_top1": 0.32786885245901637,
+  "test_top3": 0.5737704918032787,
+  "n_train": 272,
+  "n_val": 56,
+  "n_test": 61
+}

@@ -1,0 +1,8 @@
+{
+  "ckpt": "model\\artifacts\\checkpoints\\mobilenet_v3_small_best.pt",
+  "backbone": "mobilenet_v3_small",
+  "n_test": 183,
+  "test_top1": 0.43169398907103823,
+  "test_top3": 0.6666666666666666,
+  "best_val_top1": 0.4840764331210191
+}

@@ -1,0 +1,173 @@
+[
+  {
+    "espece": "Vitellaria paradoxa",
+    "slug": "vitellaria_paradoxa",
+    "avant": 60,
+    "telecharges": 0,
+    "sautés": 0,
+    "apres": 60,
+    "candidats_sources": 0
+  },
+  {
+    "espece": "Parkia biglobosa",
+    "slug": "parkia_biglobosa",
+    "avant": 59,
+    "telecharges": 0,
+    "sautés": 0,
+    "apres": 59,
+    "candidats_sources": 0
+  },
+  {
+    "espece": "Adansonia digitata",
+    "slug": "adansonia_digitata",
+    "avant": 42,
+    "telecharges": 0,
+    "sautés": 13,
+    "apres": 42,
+    "candidats_sources": 13
+  },
+  {
+    "espece": "Tamarindus indica",
+    "slug": "tamarindus_indica",
+    "avant": 59,
+    "telecharges": 0,
+    "sautés": 0,
+    "apres": 59,
+    "candidats_sources": 0
+  },
+  {
+    "espece": "Balanites aegyptiaca",
+    "slug": "balanites_aegyptiaca",
+    "avant": 52,
+    "telecharges": 0,
+    "sautés": 3,
+    "apres": 52,
+    "candidats_sources": 3
+  },
+  {
+    "espece": "Detarium microcarpum",
+    "slug": "detarium_microcarpum",
+    "avant": 54,
+    "telecharges": 0,
+    "sautés": 1,
+    "apres": 54,
+    "candidats_sources": 1
+  },
+  {
+    "espece": "Ziziphus mauritiana",
+    "slug": "ziziphus_mauritiana",
+    "avant": 28,
+    "telecharges": 19,
+    "sautés": 8,
+    "apres": 47,
+    "candidats_sources": 27
+  },
+  {
+    "espece": "Khaya senegalensis",
+    "slug": "khaya_senegalensis",
+    "avant": 50,
+    "telecharges": 0,
+    "sautés": 5,
+    "apres": 50,
+    "candidats_sources": 5
+  },
+  {
+    "espece": "Acacia senegal",
+    "slug": "acacia_senegal",
+    "avant": 39,
+    "telecharges": 3,
+    "sautés": 13,
+    "apres": 42,
+    "candidats_sources": 16
+  },
+  {
+    "espece": "Boscia senegalensis",
+    "slug": "boscia_senegalensis",
+    "avant": 31,
+    "telecharges": 12,
+    "sautés": 22,
+    "apres": 43,
+    "candidats_sources": 34
+  },
+  {
+    "espece": "Moringa oleifera",
+    "slug": "moringa_oleifera",
+    "avant": 32,
+    "telecharges": 23,
+    "sautés": 0,
+    "apres": 55,
+    "candidats_sources": 23
+  },
+  {
+    "espece": "Gardenia erubescens",
+    "slug": "gardenia_erubescens",
+    "avant": 32,
+    "telecharges": 11,
+    "sautés": 12,
+    "apres": 43,
+    "candidats_sources": 23
+  },
+  {
+    "espece": "Mangifera indica",
+    "slug": "mangifera_indica",
+    "avant": 50,
+    "telecharges": 3,
+    "sautés": 2,
+    "apres": 53,
+    "candidats_sources": 5
+  },
+  {
+    "espece": "Anacardium occidentale",
+    "slug": "anacardium_occidentale",
+    "avant": 33,
+    "telecharges": 11,
+    "sautés": 11,
+    "apres": 44,
+    "candidats_sources": 22
+  },
+  {
+    "espece": "Diospyros mespiliformis",
+    "slug": "diospyros_mespiliformis",
+    "avant": 23,
+    "telecharges": 27,
+    "sautés": 5,
+    "apres": 50,
+    "candidats_sources": 32
+  },
+  {
+    "espece": "Faidherbia albida",
+    "slug": "faidherbia_albida",
+    "avant": 32,
+    "telecharges": 12,
+    "sautés": 11,
+    "apres": 44,
+    "candidats_sources": 23
+  },
+  {
+    "espece": "Lannea microcarpa",
+    "slug": "lannea_microcarpa",
+    "avant": 21,
+    "telecharges": 0,
+    "sautés": 8,
+    "apres": 21,
+    "candidats_sources": 8
+  },
+  {
+    "espece": "Guiera senegalensis",
+    "slug": "guiera_senegalensis",
+    "avant": 20,
+    "telecharges": 35,
+    "sautés": 0,
+    "apres": 55,
+    "candidats_sources": 35
+  },
+  {
+    "espece": "Ximenia americana",
+    "slug": "ximenia_americana",
+    "avant": 20,
+    "telecharges": 35,
+    "sautés": 0,
+    "apres": 55,
+    "candidats_sources": 35
+  }
+]

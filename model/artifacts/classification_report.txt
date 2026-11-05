@@ -1,0 +1,28 @@
+                         precision    recall  f1-score   support
+
+        acacia_nilotica       0.41      0.70      0.52        10
+         acacia_senegal       0.50      0.43      0.46         7
+     adansonia_digitata       0.33      0.43      0.38         7
+ anacardium_occidentale       0.55      0.75      0.63         8
+   balanites_aegyptiaca       0.25      0.22      0.24         9
+        bombax_costatum       0.67      0.67      0.67         9
+    boscia_senegalensis       0.50      0.43      0.46         7
+   detarium_microcarpum       0.14      0.11      0.12         9
+diospyros_mespiliformis       0.17      0.12      0.14         8
+      faidherbia_albida       0.50      0.50      0.50         8
+    gardenia_erubescens       0.83      0.71      0.77         7
+    guiera_senegalensis       0.50      0.44      0.47         9
+     khaya_senegalensis       0.38      0.38      0.38         8
+      lannea_microcarpa       0.33      0.25      0.29         4
+       mangifera_indica       0.60      0.33      0.43         9
+       moringa_oleifera       0.25      0.33      0.29         9
+       parkia_biglobosa       0.86      0.60      0.71        10
+     sclerocarya_birrea       0.22      0.22      0.22         9
+      tamarindus_indica       0.50      0.40      0.44        10
+    vitellaria_paradoxa       0.30      0.33      0.32         9
+      ximenia_americana       0.50      0.44      0.47         9
+    ziziphus_mauritiana       0.42      0.62      0.50         8
+
+               accuracy                           0.43       183
+              macro avg       0.44      0.43      0.43       183
+           weighted avg       0.44      0.43      0.43       183
