@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import json
 import random
+import re
+import unicodedata
+from collections import Counter, defaultdict
 from pathlib import Path
 
 import pandas as pd
@@ -48,8 +51,9 @@ def stratified_split(
     val_ratio: float = 0.15,
     seed: int = 42,
 ) -> dict[str, dict[str, list[str]]]:
-    """Split 70/15/15 par espèce. Garde au moins 1 image en val et test si possible."""
+    """Split 70/15/15 par espèce en gardant ensemble les images d'une même source."""
     rng = random.Random(seed)
+    image_groups = _load_image_groups()
     splits: dict[str, dict[str, list[str]]] = {}
     for slug, folder in classes.items():
         files = sorted(f.name for f in folder.iterdir() if f.suffix.lower() in VALID_EXT)
@@ -63,12 +67,63 @@ def stratified_split(
         if n_test <= 0 and n > 1:
             n_test = 1
             n_train = max(1, n - n_val - n_test)
-        splits[slug] = {
+        initial = {
             "train": files[:n_train],
             "val": files[n_train : n_train + n_val],
             "test": files[n_train + n_val : n_train + n_val + n_test],
         }
+        original_bucket = {name: bucket for bucket, names in initial.items() for name in names}
+        groups: dict[str, list[str]] = defaultdict(list)
+        for name in files:
+            groups[image_groups.get((slug, name), f"single:{name}")].append(name)
+
+        grouped = {key: [] for key in ("train", "val", "test")}
+        current_sizes = Counter()
+        targets = {"train": n * train_ratio, "val": n * val_ratio, "test": n * (1 - train_ratio - val_ratio)}
+        group_items = list(groups.items())
+        rng.shuffle(group_items)
+        group_items.sort(key=lambda item: len(item[1]), reverse=True)
+        for _, names in group_items:
+            votes = Counter(original_bucket[name] for name in names)
+            max_votes = max(votes.values())
+            tied = [bucket for bucket in ("train", "val", "test") if votes[bucket] == max_votes]
+            bucket = min(tied, key=lambda key: current_sizes[key] / max(targets[key], 1))
+            grouped[bucket].extend(names)
+            current_sizes[bucket] += len(names)
+        splits[slug] = grouped
     return splits
+
+
+def _load_image_groups() -> dict[tuple[str, str], str]:
+    """Regroupe les vues d'une observation iNaturalist et les séries Commons."""
+    manifest = METADATA_DIR / "image_sources.jsonl"
+    if not manifest.exists():
+        return {}
+    groups = {}
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if row.get("review_status") == "excluded_manual":
+            continue
+        file_name = Path(str(row.get("fichier", "")).replace("\\", "/")).name
+        slug = row.get("slug")
+        if not file_name or not slug:
+            continue
+        if row.get("source") == "inaturalist":
+            observation_id = str(row.get("page", "")).rstrip("/").split("/")[-1]
+            group = f"inat:{observation_id}" if observation_id.isdigit() else f"single:{file_name}"
+        else:
+            title = str(row.get("page", file_name)).removeprefix("File:")
+            stem = Path(title).stem.lower()
+            stem = re.sub(r"\s*\((?:\d+(?:\s+of\s+\d+)?)\)\s*$", "", stem)
+            stem = re.sub(r"\s+\d+$", "", stem)
+            stem = unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode("ascii")
+            stem = re.sub(r"[^a-z0-9]+", " ", stem).strip()
+            group = f"commons:{slug}:{stem or file_name}"
+        groups[(slug, file_name)] = group
+    return groups
 
 
 def save_splits(splits: dict, path: Path | None = None) -> Path:

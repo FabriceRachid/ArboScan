@@ -29,6 +29,11 @@ MODELS_DIR = ROOT / "model" / "artifacts"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
+def _limit_worker_threads(_worker_id: int) -> None:
+    """Avoid CPU oversubscription when image loading runs in worker processes."""
+    torch.set_num_threads(1)
+
+
 def build_classifier(backbone_name: str, num_classes: int, pretrained: bool = True) -> nn.Module:
     from torchvision import models
 
@@ -98,6 +103,7 @@ def train(
     lr1: float = 1e-3,
     lr2: float = 1e-4,
     weight_decay: float = 1e-4,
+    num_workers: int = 2,
 ) -> Path:
     splits = load_splits()
     labels = build_labels(splits)
@@ -106,8 +112,16 @@ def train(
 
     train_ds = TreeLeafFruitDataset(SAMPLES_DIR, _pick(splits, "train"), labels, train=True)
     val_ds = TreeLeafFruitDataset(SAMPLES_DIR, _pick(splits, "val"), labels, train=False)
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, drop_last=False)
-    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+    loader_options = {
+        "num_workers": num_workers,
+        "persistent_workers": num_workers > 0,
+        "worker_init_fn": _limit_worker_threads if num_workers > 0 else None,
+        "pin_memory": DEVICE == "cuda",
+    }
+    train_loader = DataLoader(
+        train_ds, batch_size=batch_size, shuffle=True, drop_last=False, **loader_options
+    )
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, **loader_options)
 
     print(f"Classes={num_classes} train={len(train_ds)} val={len(val_ds)} device={DEVICE}")
 
@@ -191,5 +205,6 @@ if __name__ == "__main__":
     p.add_argument("--batch-size", type=int, default=32)
     p.add_argument("--lr1", type=float, default=1e-3)
     p.add_argument("--lr2", type=float, default=1e-4)
+    p.add_argument("--num-workers", type=int, default=2)
     a = p.parse_args()
-    train(a.backbone, a.epochs1, a.epochs2, a.batch_size, a.lr1, a.lr2)
+    train(a.backbone, a.epochs1, a.epochs2, a.batch_size, a.lr1, a.lr2, num_workers=a.num_workers)
